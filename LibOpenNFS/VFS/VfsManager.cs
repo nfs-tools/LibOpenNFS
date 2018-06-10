@@ -60,7 +60,11 @@ namespace LibOpenNFS.VFS
             var locationParts = location.Split('/');
             var root = locationParts[0];
 
-            if (root.Length == 0)
+            if (location == "/")
+            {
+                root = "/";
+                locationParts = new string[0];
+            } else if (root.Length == 0)
             {
                 root = "/";
             }
@@ -110,16 +114,21 @@ namespace LibOpenNFS.VFS
                         }
                     }
 
-                    lastMount?.Bundles.Add(bundle);
+                    lastMount?.MountBundle(bundle);
+                }
+                else
+                {
+                    rootMount?.MountBundle(bundle);
                 }
             }
             else
             {
                 _mounts.Add(root, new VfsMount
                 {
-                    Path = root,
-                    Bundles = { bundle }
+                    Path = root
                 });
+                
+                MountBundle(location, bundle);
             }
         }
 
@@ -129,7 +138,11 @@ namespace LibOpenNFS.VFS
         /// <param name="location">The full mount location. Example: /bundles/BUNDLEGUID</param>
         public void UnmountBundle(string location)
         {
-            
+            var parts = location.Split('/').Skip(1).ToList();
+            var mountParts = parts.Take(parts.Count - 1);
+            var mountPath = "/" + string.Join("/", mountParts);
+
+            Console.WriteLine("ok");
         }
         
         /// <summary>

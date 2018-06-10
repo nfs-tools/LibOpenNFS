@@ -12,6 +12,7 @@ namespace LibOpenNFS.TestingArea
             var bundle1 = VfsManager.CreateBundle("TestBundle");
             var bundle2 = VfsManager.CreateBundle("TestBundle2");
             var bundle3 = VfsManager.CreateBundle("TestBundle3");
+            var bundle4 = VfsManager.CreateBundle("TestBundle4");
             
             var tpk1 = bundle1.MountResource(VfsManager.CreateTexturePackResource());
             var tpk2 = bundle1.MountResource(VfsManager.CreateTexturePackResource());
@@ -20,6 +21,9 @@ namespace LibOpenNFS.TestingArea
             vfsManager.MountBundle("/Global", bundle1);
             vfsManager.MountBundle("/Global", bundle2);
             vfsManager.MountBundle("/Global/Test/Path", bundle3);
+            vfsManager.MountBundle("/", bundle4);
+            
+            vfsManager.UnmountBundle($"/Global/Test/Path/{bundle3.ID}");
             
             Console.WriteLine("Done!");
         }

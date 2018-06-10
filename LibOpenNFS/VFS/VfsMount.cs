@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LibOpenNFS.VFS
 {
@@ -29,6 +30,20 @@ namespace LibOpenNFS.VFS
         {
             Bundles = new List<VfsBundle>();
             SubMounts = new List<VfsMount>();
+        }
+
+        /// <summary>
+        /// Mount a bundle.
+        /// </summary>
+        /// <param name="bundle"></param>
+        public void MountBundle(VfsBundle bundle)
+        {
+            if (Bundles.Exists(b => b.ID == bundle.ID))
+            {
+                throw new Exception($"Bundle [{bundle.ID}] is already mounted to [{Path}].");
+            }
+            
+            Bundles.Add(bundle);
         }
     }
 }
