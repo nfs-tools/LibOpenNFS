@@ -60,7 +60,7 @@ namespace LibOpenNFS
         /// </summary>
         /// <param name="exePath"></param>
         /// <returns></returns>
-        public static Game GetGame(string exePath)
+        public static NFSGame GetGame(string exePath)
         {
             DebugUtil.EnsureCondition(File.Exists(exePath), () => $"Can't find file: {exePath}");
 
@@ -74,12 +74,11 @@ namespace LibOpenNFS
                 switch (item)
                 {
                     case EaglSmybolEntryUG2:
-                        return Game.Underground2;
-
+                        return NFSGame.Underground2;
                     case EaglSymbolEntryWorld:
-                        return Game.World;
+                        return NFSGame.World;
                     default:
-                        return Game.Unknown;
+                        return NFSGame.Unknown;
                 }
             }
 
@@ -91,13 +90,13 @@ namespace LibOpenNFS
                 switch (item)
                 {
                     case Eagl4SmybolEntryMW:
-                        return Game.MW;
+                        return NFSGame.MW;
                     case Eagl4SmybolEntryCarbon:
-                        return Game.Carbon;
+                        return NFSGame.Carbon;
                     case Eagl4SmybolEntryProstreet:
-                        return Game.ProStreet;
+                        return NFSGame.ProStreet;
                     default:
-                        return Game.Unknown;
+                        return NFSGame.Unknown;
                 }
             }
 
@@ -109,13 +108,13 @@ namespace LibOpenNFS
                 switch (item)
                 {
                     case NfsUndercoverStringAddress:
-                        return Game.Undercover;
+                        return NFSGame.Undercover;
                     default:
-                        return Game.Unknown;
+                        return NFSGame.Unknown;
                 }
             }
 
-            return Game.Unknown;
+            return NFSGame.Unknown;
         }
     }
 }

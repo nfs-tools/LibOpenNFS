@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C9BC3DBC-9B88-4F92-A285-5E3245C106FE}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{ABF29139-91B9-4A72-B8A0-BF0E5AE3BC91}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibOpenNFS</RootNamespace>
-    <AssemblyName>LibOpenNFS</AssemblyName>
+    <RootNamespace>LibOpenNFS.TestingArea</RootNamespace>
+    <AssemblyName>LibOpenNFS.TestingArea</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -38,23 +38,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Game.cs" />
-    <Compile Include="GameDatabase.cs" />
-    <Compile Include="GameFinder.cs" />
-    <Compile Include="GameManager.cs" />
-    <Compile Include="Games\Carbon\CarbonLoader.cs" />
-    <Compile Include="Games\MW\MWLoader.cs" />
-    <Compile Include="Interfaces\IGameLoader.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\BinaryUtil.cs" />
-    <Compile Include="Utils\DebugUtil.cs" />
-    <Compile Include="Utils\GameUtil.cs" />
-    <Compile Include="VFS\Resources\TexturePackResource.cs" />
-    <Compile Include="VFS\VfsBundle.cs" />
-    <Compile Include="VFS\VfsManager.cs" />
-    <Compile Include="VFS\VfsMount.cs" />
-    <Compile Include="VFS\VfsResource.cs" />
-    <Compile Include="VFS\VfsUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LibOpenNFS\LibOpenNFS.csproj">
+      <Project>{c9bc3dbc-9b88-4f92-a285-5e3245c106fe}</Project>
+      <Name>LibOpenNFS</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

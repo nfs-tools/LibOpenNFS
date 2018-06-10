@@ -18,8 +18,9 @@ namespace LibOpenNFS.VFS
         private readonly Dictionary<string, VfsMount> _mounts;
 
         /// <summary>
-        /// Instantiate the VFS manager.
+        /// Initialize the VFS manager.
         /// </summary>
+        /// <remarks>private because this class is a singleton.</remarks>
         private VfsManager()
         {
             _mounts = new Dictionary<string, VfsMount>();
@@ -59,6 +60,11 @@ namespace LibOpenNFS.VFS
             var locationParts = location.Split('/');
             var root = locationParts[0];
 
+            if (root.Length == 0)
+            {
+                root = "/";
+            }
+
             if (_mounts.ContainsKey(root))
             {
                 var rootMount = _mounts[root];
@@ -67,7 +73,7 @@ namespace LibOpenNFS.VFS
                 if (locationParts.Length > 1)
                 {
                     var partQueue = new Queue<string>(locationParts.Skip(1));
-                    var builtPath = $"{root}/";
+                    var builtPath = $"{root}";
 
                     VfsMount lastMount = null;
 
@@ -77,20 +83,20 @@ namespace LibOpenNFS.VFS
 
                         if (lastMount == null)
                         {
-                            if (!rootMount.SubMounts.Exists(m => m.Path == part))
+                            if (!rootMount.SubMounts.Exists(m => m.Path == $"/{part}"))
                             {
                                 rootMount.SubMounts.Add(new VfsMount
                                 {
-                                    Path = part
+                                    Path = $"/{part}"
                                 });
                             }
 
-                            builtPath += part;
-                            lastMount = rootMount.SubMounts.Find(m => m.Path == part);
+                            builtPath += $"{part}";
+                            lastMount = rootMount.SubMounts.Find(m => m.Path == $"/{part}");
                         }
                         else
                         {
-                            builtPath += part;
+                            builtPath += $"/{part}";
 
                             if (!lastMount.SubMounts.Exists(m => m.Path == builtPath))
                             {
@@ -106,17 +112,26 @@ namespace LibOpenNFS.VFS
 
                     lastMount?.Bundles.Add(bundle);
                 }
-                else
+            }
+            else
+            {
+                _mounts.Add(root, new VfsMount
                 {
-                    _mounts.Add(location, new VfsMount
-                    {
-                        Path = root,
-                        Bundles = {bundle}
-                    });
-                }
+                    Path = root,
+                    Bundles = { bundle }
+                });
             }
         }
 
+        /// <summary>
+        /// Unmount a bundle from the virtual filesystem.
+        /// </summary>
+        /// <param name="location">The full mount location. Example: /bundles/BUNDLEGUID</param>
+        public void UnmountBundle(string location)
+        {
+            
+        }
+        
         /// <summary>
         /// Attempt to find a resource by the given ID.
         /// </summary>
