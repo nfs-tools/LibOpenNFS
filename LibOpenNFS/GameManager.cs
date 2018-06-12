@@ -2,6 +2,7 @@
 using LibOpenNFS.Games.MW;
 using LibOpenNFS.Interfaces;
 using LibOpenNFS.Utils;
+using LibOpenNFS.VFS;
 
 namespace LibOpenNFS
 {
@@ -64,9 +65,19 @@ namespace LibOpenNFS
             }
         }
 
+        /// <summary>
+        /// Get the <see cref="IGameLoader"/> instance.
+        /// </summary>
+        /// <returns></returns>
+        public IGameLoader GetLoader() => _loader;
+
+        /// <summary>
+        /// Resets the game manager and the VFS.
+        /// </summary>
         public void Reset()
         {
-            
+            _loader = null;
+            VfsManager.Instance.Reset();
         }
     }
 }

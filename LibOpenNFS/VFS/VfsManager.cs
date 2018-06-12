@@ -11,11 +11,34 @@ namespace LibOpenNFS.VFS
     /// </summary>
     public class VfsManager
     {
-        private static Lazy<VfsManager> Lazy => new Lazy<VfsManager>(() => new VfsManager());
+//        private static Lazy<VfsManager> Lazy => new Lazy<VfsManager>(() => new VfsManager());
+//
+//        public static VfsManager Instance => Lazy.Value;
 
-        public static VfsManager Instance => Lazy.Value;
+        private static VfsManager _instance;
 
-        private readonly Dictionary<string, VfsMount> _mounts;
+        private static readonly object InstanceLock = new object();
+
+        public static VfsManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (InstanceLock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new VfsManager();
+                        }
+                    }
+                }
+
+                return _instance;
+            }
+        }
+
+        private Dictionary<string, VfsMount> _mounts;
 
         /// <summary>
         /// Initialize the VFS manager.
@@ -23,7 +46,7 @@ namespace LibOpenNFS.VFS
         /// <remarks>private because this class is a singleton.</remarks>
         private VfsManager()
         {
-            _mounts = new Dictionary<string, VfsMount>();
+            Reset();
         }
 
         /// <summary>
@@ -46,7 +69,23 @@ namespace LibOpenNFS.VFS
         }
 
         /// <summary>
-        /// Mounts a bundle to the virtual filesystem.
+        /// Reset the VFS. This clears all mount points.
+        /// </summary>
+        public void Reset()
+        {
+            _mounts = new Dictionary<string, VfsMount>
+            {
+                {
+                    "/", new VfsMount
+                    {
+                        Path = "/"
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Mounts a bundle to the VFS.
         /// </summary>
         /// <param name="location">The mount location. Example: /bundles</param>
         /// <param name="bundle"></param>
@@ -57,26 +96,145 @@ namespace LibOpenNFS.VFS
                 throw new ArgumentException("Location cannot be empty", nameof(location));
             }
 
-            var locationParts = location.Split('/');
-            var root = locationParts[0];
+            // Make sure the root mount exists
+            if (!FindMount("/", out var rootMount))
+            {
+                throw new Exception("Failed to access root mount.");
+            }
 
-            if (location == "/")
+            var parts = location.Split('/').Skip(1).ToList();
+
+            if (parts.Count == 1)
+            {
+                if (string.IsNullOrWhiteSpace(parts[0]))
+                {
+                    // Trying to mount to root
+                    rootMount.MountBundle(bundle);
+                }
+                else
+                {
+                    if (rootMount.SubMounts.Exists(m => m.Path == $"/{parts[0]}"))
+                    {
+                        rootMount.SubMounts.Find(m => m.Path == $"/{parts[0]}")
+                            .MountBundle(bundle);
+                    }
+                    else
+                    {
+                        // Create a sub-mount under root
+                        rootMount.SubMounts.Add(new VfsMount
+                        {
+                            Path = $"/{parts[0]}",
+                            Bundles = {bundle}
+                        });
+                    }
+                }
+            }
+            else
+            {
+                var lastMount = rootMount;
+                var partQueue = new Queue<string>(parts);
+                var builtPath = "/";
+
+                while (partQueue.Count > 0)
+                {
+                    var part = partQueue.Dequeue();
+
+                    if (lastMount.Path == rootMount.Path)
+                    {
+                        builtPath += part;
+
+                        if (!rootMount.SubMounts.Exists(m => m.Path == builtPath))
+                        {
+                            rootMount.SubMounts.Add(new VfsMount
+                            {
+                                Path = builtPath
+                            });
+                        }
+
+                        lastMount = rootMount.SubMounts.Find(m => m.Path == builtPath);
+                    }
+                    else
+                    {
+                        builtPath += $"/{part}";
+
+                        if (!lastMount.SubMounts.Exists(m => m.Path == builtPath))
+                        {
+                            lastMount.SubMounts.Add(new VfsMount
+                            {
+                                Path = builtPath
+                            });
+                        }
+
+                        lastMount = lastMount.SubMounts.Find(m => m.Path == builtPath);
+                    }
+                }
+
+                lastMount.MountBundle(bundle);
+            }
+
+            _mounts["/"] = rootMount;
+        }
+
+        /// <summary>
+        /// Unmount a bundle from the VFS.
+        /// </summary>
+        /// <param name="location">The full mount location. Example: /bundles/BUNDLEGUID</param>
+        public void UnmountBundle(string location)
+        {
+            var parts = location.Split('/').Skip(1).ToList();
+            var mountParts = parts.Take(parts.Count - 1);
+            var mountPath = "/" + string.Join("/", mountParts);
+
+            if (!FindMount(mountPath, out var mount))
+            {
+                throw new Exception("Cannot find mount for bundle");
+            }
+
+            mount.UnmountBundle(Guid.Parse(parts.Last()));
+        }
+
+        /// <summary>
+        /// Attempt to find a VFS mount point.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="mount"></param>
+        /// <returns></returns>
+        public bool FindMount(string path, out VfsMount mount)
+        {
+            var parts = path.Split('/').ToList();
+            var root = parts[0];
+
+            if (path == "/")
             {
                 root = "/";
-                locationParts = new string[0];
-            } else if (root.Length == 0)
+                parts = new List<string>();
+            }
+            else if (root.Length == 0)
             {
                 root = "/";
+            }
+
+            // Check to see if we're accessing the root.
+            if (path == "/")
+            {
+                if (!_mounts.ContainsKey(root))
+                {
+                    // This shouldn't ever happen. Ever. Only if something really stupid is going on.
+                    throw new Exception($"Cannot access root mount.");
+                }
+
+                mount = _mounts[root];
+
+                return true;
             }
 
             if (_mounts.ContainsKey(root))
             {
                 var rootMount = _mounts[root];
 
-                // Do we need submounts?
-                if (locationParts.Length > 1)
+                if (parts.Count > 1)
                 {
-                    var partQueue = new Queue<string>(locationParts.Skip(1));
+                    var partQueue = new Queue<string>(parts.Skip(1));
                     var builtPath = $"{root}";
 
                     VfsMount lastMount = null;
@@ -89,10 +247,7 @@ namespace LibOpenNFS.VFS
                         {
                             if (!rootMount.SubMounts.Exists(m => m.Path == $"/{part}"))
                             {
-                                rootMount.SubMounts.Add(new VfsMount
-                                {
-                                    Path = $"/{part}"
-                                });
+                                throw new Exception($"Cannot find mount @ [/{part}]");
                             }
 
                             builtPath += $"{part}";
@@ -104,47 +259,23 @@ namespace LibOpenNFS.VFS
 
                             if (!lastMount.SubMounts.Exists(m => m.Path == builtPath))
                             {
-                                lastMount.SubMounts.Add(new VfsMount
-                                {
-                                    Path = builtPath
-                                });
+                                throw new Exception($"Cannot find mount @ [{builtPath}]");
                             }
 
                             lastMount = lastMount.SubMounts.Find(m => m.Path == builtPath);
                         }
                     }
 
-                    lastMount?.MountBundle(bundle);
-                }
-                else
-                {
-                    rootMount?.MountBundle(bundle);
+                    mount = lastMount;
+                    return true;
                 }
             }
-            else
-            {
-                _mounts.Add(root, new VfsMount
-                {
-                    Path = root
-                });
-                
-                MountBundle(location, bundle);
-            }
+
+            mount = null;
+
+            return false;
         }
 
-        /// <summary>
-        /// Unmount a bundle from the virtual filesystem.
-        /// </summary>
-        /// <param name="location">The full mount location. Example: /bundles/BUNDLEGUID</param>
-        public void UnmountBundle(string location)
-        {
-            var parts = location.Split('/').Skip(1).ToList();
-            var mountParts = parts.Take(parts.Count - 1);
-            var mountPath = "/" + string.Join("/", mountParts);
-
-            Console.WriteLine("ok");
-        }
-        
         /// <summary>
         /// Attempt to find a resource by the given ID.
         /// </summary>
@@ -174,6 +305,17 @@ namespace LibOpenNFS.VFS
 
             return result != null;
         }
+        
+        /// <summary>
+        /// Attempt to find a bundle by the given ID.
+        /// </summary>
+        /// <param name="id"></param>
+        public VfsBundle FindBundle(Guid id)
+        {
+            var result = ScanMountsForBundle(id, _mounts.Values);
+
+            return result;
+        }
 
         /// <summary>
         /// Internal function to scan VFS mounts for a resource with the given ID.
@@ -189,17 +331,40 @@ namespace LibOpenNFS.VFS
             {
                 if (mount.Bundles.Count > 0)
                 {
-                    foreach (var bundle in mount.Bundles)
+                    var result = ScanBundlesForResource<TR>(id, mount.Bundles);
+
+                    if (result != null)
                     {
-                        if (bundle.Resources.Any(r => r.ID == id))
-                        {
-                            return bundle.Resources.Find(r => r.ID == id) as TR;
-                        }
+                        return result;
                     }
                 }
-                else if (mount.SubMounts.Count > 0)
+
+                if (mount.SubMounts.Count > 0)
                 {
-                    return ScanMountsForResource<TR>(id, mount.SubMounts);
+                    var result = ScanMountsForResource<TR>(id, mount.SubMounts);
+
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private TR ScanBundlesForResource<TR>(Guid id, IEnumerable<VfsBundle> bundles) where TR : VfsResource
+        {
+            foreach (var bundle in bundles)
+            {
+                if (bundle.Resources.Exists(r => r.ID == id))
+                {
+                    return bundle.Resources.Find(r => r.ID == id) as TR;
+                }
+
+                if (bundle.Bundles.Count > 0)
+                {
+                    return ScanBundlesForResource<TR>(id, bundle.Bundles);
                 }
             }
 
@@ -224,7 +389,12 @@ namespace LibOpenNFS.VFS
 
                 if (mount.SubMounts.Count > 0)
                 {
-                    return ScanMountsForBundle(id, mount.SubMounts);
+                    var result = ScanMountsForBundle(id, mount.SubMounts);
+
+                    if (result != null)
+                    {
+                        return result;
+                    }
                 }
             }
 

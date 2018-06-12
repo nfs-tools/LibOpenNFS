@@ -1,51 +1,52 @@
 ﻿using System;
-using System.Data;
 using LibOpenNFS.VFS;
 using LibOpenNFS.VFS.Resources;
 using NUnit.Framework;
 
 namespace LibOpenNFS.Tests
 {
-    /// <summary>
-    /// Tests for the VFS (Virtual File System) code.
-    /// </summary>
-    [TestFixture, SetUpFixture]
+    [TestFixture]
     public class VfsTest
     {
-        private VfsManager _vfsManager;
-
-        [OneTimeSetUp]
-        public void SetUp()
-        {
-            _vfsManager = VfsManager.Instance;
-        }
-        
-        /// <summary>
-        /// Tests the bundle mounting functionality by creating bundles and loading resources into them,
-        /// then ensuring that the bundles and resources can be found.
-        /// </summary>
         [Test]
         public void TestMounting()
         {
-            var bundle1 = VfsManager.CreateBundle("TestBundle");
+            var vfsManager = VfsManager.Instance;
+            
+            var bundle1 = VfsManager.CreateBundle("TestBundle1");
+            var testTpk1 = VfsManager.CreateTexturePackResource();
+            
             var bundle2 = VfsManager.CreateBundle("TestBundle2");
+            var testTpk2 = VfsManager.CreateTexturePackResource();
+
             var bundle3 = VfsManager.CreateBundle("TestBundle3");
+
+            bundle1.MountResource(testTpk1);
+            bundle2.MountResource(testTpk1);
+            bundle2.MountResource(testTpk2);
+
+            var bundle2Child = VfsManager.CreateBundle("Bundle2_Child");
+            bundle2Child.MountResource(testTpk1);
+
+            bundle2.MountBundle(bundle2Child);
             
-            var tpk1 = bundle1.MountResource(VfsManager.CreateTexturePackResource());
-            var tpk2 = bundle1.MountResource(VfsManager.CreateTexturePackResource());
-            var tpk3 = bundle3.MountResource(VfsManager.CreateTexturePackResource());
+            vfsManager.MountBundle("/", bundle1);
+            vfsManager.MountBundle("/test", bundle2);
+            vfsManager.MountBundle("/test/nested/paths", bundle3);
             
-            _vfsManager.MountBundle("/Global", bundle1);
-            _vfsManager.MountBundle("/Global", bundle2);
-            _vfsManager.MountBundle("/Global/Test/Path", bundle3);
+            Assert.True(vfsManager.FindBundle(bundle1.ID, out _));
+            Assert.True(vfsManager.FindResource<TexturePackResource>(testTpk1.ID, out _));
             
-            Assert.True(_vfsManager.FindBundle(bundle1.ID, out _));
-            Assert.True(_vfsManager.FindBundle(bundle2.ID, out _));
-            Assert.True(_vfsManager.FindBundle(bundle3.ID, out _));
+            Assert.Throws<Exception>(() => vfsManager.MountBundle("/", bundle1));
             
-            Assert.True(_vfsManager.FindResource<TexturePackResource>(tpk1.ID, out _));
-            Assert.True(_vfsManager.FindResource<TexturePackResource>(tpk2.ID, out _));
-            Assert.True(_vfsManager.FindResource<TexturePackResource>(tpk3.ID, out _));
+            Assert.True(vfsManager.FindBundle(bundle2.ID, out _));
+            Assert.True(vfsManager.FindBundle(bundle3.ID, out _));
+            
+            vfsManager.UnmountBundle($"/test/nested/paths/{bundle3.ID}");
+            
+            Assert.False(vfsManager.FindBundle(bundle3.ID, out _));
+
+//            Assert.True(true);
         }
     }
 }

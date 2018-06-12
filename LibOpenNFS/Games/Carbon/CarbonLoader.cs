@@ -10,7 +10,7 @@ namespace LibOpenNFS.Games.Carbon
     {
         public void Initialize(string directory)
         {
-            throw new System.NotImplementedException();
+            _directory = directory;
         }
 
         public void LoadMapStream()
@@ -32,5 +32,7 @@ namespace LibOpenNFS.Games.Carbon
         {
             throw new System.NotImplementedException();
         }
+
+        private string _directory;
     }
 }

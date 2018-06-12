@@ -1,4 +1,9 @@
-﻿using LibOpenNFS.Interfaces;
+﻿using System;
+using System.IO;
+using LibOpenNFS.Bundles;
+using LibOpenNFS.Bundles.Resources;
+using LibOpenNFS.Interfaces;
+using LibOpenNFS.VFS;
 
 namespace LibOpenNFS.Games.MW
 {
@@ -10,12 +15,51 @@ namespace LibOpenNFS.Games.MW
     {
         public void Initialize(string directory)
         {
-            throw new System.NotImplementedException();
+            _directory = directory;
         }
 
         public void LoadMapStream()
         {
-            throw new System.NotImplementedException();
+            var bundleFile = Path.Combine(_directory, "TRACKS", "L2RA.BUN");
+            var streamFile = Path.Combine(_directory, "TRACKS", "STREAML2RA.BUN");
+
+            var msr = new MWMapStreamReader(
+                bundleFile,
+                streamFile
+            );
+            
+            msr.Init();
+            msr.Read();
+
+            var sections = msr.GetSections();
+
+            foreach (var section in sections)
+            {
+                var sectionBundle = VfsManager.CreateBundle(section.Name);
+                
+                Console.WriteLine($"Reading section: {section.Name} @ 0x{section.Offset:X8}");
+                
+                // Create a new reader
+                var reader = new MWBundleReader(streamFile, new BundleReadOptions
+                {
+                    StartPosition = section.Offset,
+                    EndPosition = section.Offset + section.Size
+                });
+                
+                var resources = reader.Read();
+
+                foreach (var resource in resources)
+                {
+                    if (resource is TexturePack tpk)
+                    {
+                        sectionBundle.MountResource(VfsManager.CreateTexturePackResource());
+                    }
+                }
+
+                VfsManager.Instance
+                    .FindBundle(msr.MapStreamId)
+                    .MountBundle(sectionBundle);
+            }
         }
 
         public void LoadGlobal()
@@ -32,5 +76,7 @@ namespace LibOpenNFS.Games.MW
         {
             throw new System.NotImplementedException();
         }
+        
+        private string _directory;
     }
 }

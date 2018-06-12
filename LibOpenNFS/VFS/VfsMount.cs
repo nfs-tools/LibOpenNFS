@@ -45,5 +45,33 @@ namespace LibOpenNFS.VFS
             
             Bundles.Add(bundle);
         }
+        
+        /// <summary>
+        /// Unmount a bundle.
+        /// </summary>
+        /// <param name="bundleId"></param>
+        public void UnmountBundle(Guid bundleId)
+        {
+            if (!Bundles.Exists(b => b.ID == bundleId))
+            {
+                throw new Exception($"Bundle [{bundleId}] is not mounted to [{Path}].");
+            }
+            
+            Bundles.Remove(Bundles.Find(b => b.ID == bundleId));
+        }
+        
+        /// <summary>
+        /// Unmount a bundle.
+        /// </summary>
+        /// <param name="bundle"></param>
+        public void UnmountBundle(VfsBundle bundle)
+        {
+            if (!Bundles.Exists(b => b.ID == bundle.ID))
+            {
+                throw new Exception($"Bundle [{bundle.ID}] is not mounted to [{Path}].");
+            }
+            
+            UnmountBundle(bundle.ID);
+        }
     }
 }

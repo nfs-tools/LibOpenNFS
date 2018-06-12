@@ -12,6 +12,11 @@ namespace LibOpenNFS.VFS
         /// The list of resources within the bundle.
         /// </summary>
         public List<VfsResource> Resources { get; }
+        
+        /// <summary>
+        /// The list of sub-bundles.
+        /// </summary>
+        public List<VfsBundle> Bundles { get; }
 
         /// <summary>
         /// The name of the bundle.
@@ -24,7 +29,7 @@ namespace LibOpenNFS.VFS
         public Guid ID { get; }
         
         /// <summary>
-        /// Instantiate a new bundle.
+        /// Initialize the bundle.
         /// </summary>
         /// <param name="id">The bundle's unique identifier.</param>
         /// <param name="name">The name of the bundle.</param>
@@ -33,6 +38,23 @@ namespace LibOpenNFS.VFS
             Name = name;
             ID = id;
             Resources = new List<VfsResource>();
+            Bundles = new List<VfsBundle>();
+        }
+        
+        /// <summary>
+        /// Mount a bundle to the bundle. Yes, seriously.
+        /// </summary>
+        /// <param name="bundle"></param>
+        public VfsBundle MountBundle(VfsBundle bundle)
+        {
+            if (Bundles.Exists(b => b.ID == bundle.ID))
+            {
+                throw new Exception($"Bundle [{bundle.ID}] is already mounted to bundle {Name}.");
+            }
+            
+            Bundles.Add(bundle);
+
+            return Bundles.Find(b => b.ID == bundle.ID);
         }
 
         /// <summary>
@@ -42,9 +64,14 @@ namespace LibOpenNFS.VFS
         /// <typeparam name="TR"></typeparam>
         public TR MountResource<TR>(TR resource) where TR : VfsResource
         {
+            if (Resources.Exists(r => r.ID == resource.ID))
+            {
+                throw new Exception($"Resource [{resource.ID}] is already mounted to bundle {Name}.");
+            }
+            
             Resources.Add(resource);
 
-            return Resources.Find(r => r == resource) as TR;
+            return Resources.Find(r => r.ID == resource.ID) as TR;
         }
     }
 }
