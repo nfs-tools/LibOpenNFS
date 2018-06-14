@@ -12,6 +12,18 @@ namespace LibOpenNFS.Utils
     /// </summary>
     public static class BinaryUtil
     {
+        private const string FullPrecision = "0.############################################################";
+
+        /// <summary>
+        /// Formats a float value to a string, with full precision.
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public static string FormatFloat(float f)
+        {
+            return f.ToString(FullPrecision);
+        }
+        
         /// <summary>
         /// Packed floats: they exist.
         /// They're so weird, that you have to operate on byte arrays to get proper values.
@@ -44,13 +56,13 @@ namespace LibOpenNFS.Utils
         /// <summary>
         /// Read a C-style string from a binary file.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="reader"></param>
         /// <returns></returns>
-        public static string ReadNullTerminatedString(BinaryReader stream)
+        public static string ReadNullTerminatedString(BinaryReader reader)
         {
             var str = new StringBuilder();
             char ch;
-            while ((ch = (char) stream.ReadByte()) != 0)
+            while ((ch = (char) reader.ReadByte()) != 0)
                 str.Append(ch);
             return str.ToString();
         }
@@ -59,11 +71,12 @@ namespace LibOpenNFS.Utils
         /// Read a structure from a binary file.
         /// </summary>
         /// <param name="reader"></param>
+        /// <param name="size"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T ReadStruct<T>(BinaryReader reader)
+        public static T ReadStruct<T>(BinaryReader reader, int size = 0)
         {
-            var bytes = reader.ReadBytes(Marshal.SizeOf(typeof(T)));
+            var bytes = reader.ReadBytes(size == 0 ? Marshal.SizeOf(typeof(T)) : size);
 
             var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
             var theStructure = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
@@ -123,6 +136,25 @@ namespace LibOpenNFS.Utils
                 items.Add(ReadStruct<T>(reader));
 
             return items;
+        }
+
+        /// <summary>
+        /// Read padding bytes from a stream.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="outSize"></param>
+        public static void ApplyPadding(BinaryReader reader, ref uint outSize)
+        {
+            uint pad = 0;
+
+            while (reader.ReadByte() == 0x11)
+            {
+                pad++;
+            }
+
+            reader.BaseStream.Seek(pad % 2 == 0 ? -1 : -2, SeekOrigin.Current);
+
+            outSize -= pad % 2 == 0 ? pad : pad - 1;
         }
         
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LibOpenNFS.Bundles.Resources;
 using LibOpenNFS.VFS.Resources;
 
 namespace LibOpenNFS.VFS
@@ -60,12 +61,28 @@ namespace LibOpenNFS.VFS
         }
 
         /// <summary>
-        /// Create a <see cref="TexturePackResource"/> object.
+        /// Create a <see cref="TexturePackResource"/> object based on a <see cref="TexturePack"/> instance.
+        /// </summary>
+        /// <param name="tpk"></param>
+        /// <returns>The new resource.</returns>
+        public static TexturePackResource CreateTexturePackResource(TexturePack tpk)
+        {
+            return new TexturePackResource(tpk.Name)
+            {
+                Name = tpk.Path
+            };
+        }
+        
+        /// <summary>
+        /// Create a <see cref="TexturePackResource"/> object with a random name.
         /// </summary>
         /// <returns>The new resource.</returns>
         public static TexturePackResource CreateTexturePackResource()
         {
-            return new TexturePackResource($"Test TPK {Guid.NewGuid().ToString()}");
+            return new TexturePackResource($"Test TPK {Guid.NewGuid()}")
+            {
+                Name = "Dummy.tpk"
+            };
         }
 
         /// <summary>

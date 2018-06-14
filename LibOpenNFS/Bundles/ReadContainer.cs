@@ -6,7 +6,7 @@ namespace LibOpenNFS.Bundles
     /// A container used for reading chunk data from a file.
     /// </summary>
     /// <typeparam name="TC"></typeparam>
-    public abstract class ReadContainer<TC>
+    public abstract class ReadContainer<TC> where TC : BundleResource
     {
         protected ReadContainer(BinaryReader reader, long? containerSize)
         {

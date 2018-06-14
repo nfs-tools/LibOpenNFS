@@ -52,7 +52,7 @@ namespace LibOpenNFS.Games.MW
                 {
                     if (resource is TexturePack tpk)
                     {
-                        sectionBundle.MountResource(VfsManager.CreateTexturePackResource());
+                        sectionBundle.MountResource(VfsManager.CreateTexturePackResource(tpk));
                     }
                 }
 
@@ -69,12 +69,15 @@ namespace LibOpenNFS.Games.MW
 
         public void LoadDatabase()
         {
-            throw new System.NotImplementedException();
+            new MWDatabaseReader(Path.Combine(_directory, "GLOBAL", "attributes.bin")).Read();
         }
 
         public void LoadFile(string file)
         {
-            throw new System.NotImplementedException();
+            var bundle = VfsManager.CreateBundle(Path.GetFileName(file));
+            var reader = new MWBundleReader(file, null);
+
+            reader.Read();
         }
         
         private string _directory;

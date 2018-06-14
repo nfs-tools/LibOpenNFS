@@ -13,5 +13,10 @@ namespace LibOpenNFS.Games.MW
         {
             Resources.Add(new TexturePackReader(Reader, size).Get());
         }
+
+        protected override void HandleSolidList(uint size)
+        {
+            Resources.Add(new SolidListReader(Reader, size).Get());
+        }
     }
 }

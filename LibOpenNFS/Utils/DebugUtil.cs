@@ -17,7 +17,7 @@ namespace LibOpenNFS.Utils
         /// <exception cref="Exception"></exception>
         public static void EnsureCondition(bool condition, Func<string> exceptionMessage, [CallerMemberName] string callerName = "")
         {
-            if (!condition) // dirty hack
+            if (!condition)
             {
                 throw new Exception($"[{callerName}]: {exceptionMessage()}");
             }

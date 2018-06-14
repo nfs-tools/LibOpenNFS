@@ -59,6 +59,7 @@ namespace LibOpenNFS.Bundles
             {
                 var chunkId = Reader.ReadUInt32();
                 var chunkSize = Reader.ReadUInt32();
+                var chunkRunTo = Reader.BaseStream.Position + chunkSize;
 
                 Console.WriteLine($"ID: 0x{chunkId:X8} size: {chunkSize}");
 
@@ -69,10 +70,15 @@ namespace LibOpenNFS.Bundles
                         HandleTexturePack(chunkSize);
                         break;
                     }
+                    case 0x80134000: // BCHUNK_SPEED_ESOLID_LIST_CHUNKS
+                    {
+                        HandleSolidList(chunkSize);
+                        break;
+                    }
                     default: break;
                 }
 
-                Reader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
+                Reader.BaseStream.Seek(chunkRunTo, SeekOrigin.Begin);
             }
 
             return Resources;
@@ -87,6 +93,13 @@ namespace LibOpenNFS.Bundles
         /// Read a texture pack chunk.
         /// </summary>
         protected virtual void HandleTexturePack(uint size)
+        {
+        }
+        
+        /// <summary>
+        /// Read a solid list chunk.
+        /// </summary>
+        protected virtual void HandleSolidList(uint size)
         {
         }
 
