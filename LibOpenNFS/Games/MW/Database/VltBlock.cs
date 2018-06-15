@@ -4,7 +4,7 @@ namespace LibOpenNFS.Games.MW.Database
 {
     public class VltBlock
     {
-        public VltType Type { get; set; }
+        public VltMarker Type { get; set; }
         
         public int BlockLength { get; set; }
         

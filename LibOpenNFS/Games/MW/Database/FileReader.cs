@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using LibOpenNFS.Games.MW.Database.Blocks;
+using LibOpenNFS.Games.MW.Database.Table;
 using LibOpenNFS.Utils;
 
 namespace LibOpenNFS.Games.MW.Database
@@ -12,12 +13,14 @@ namespace LibOpenNFS.Games.MW.Database
     public class FileReader : IDisposable
     {
         private readonly VpakFile _file;
-        private readonly List<VltBlock> _blocks;
-        
+        private readonly List<VltBlockContainer> _blocks;
+
         private BinaryReader _vltReader;
         private BinaryReader _binReader;
 
         private readonly Dictionary<uint, string> _hashDictionary;
+
+        private readonly VltClass.ClassManager _classManager;
 
         /// <summary>
         /// Initialize the reader
@@ -26,8 +29,9 @@ namespace LibOpenNFS.Games.MW.Database
         public FileReader(VpakFile file)
         {
             _file = file;
-            _blocks = new List<VltBlock>();
+            _blocks = new List<VltBlockContainer>();
             _hashDictionary = new Dictionary<uint, string>();
+            _classManager = new VltClass.ClassManager();
         }
 
         /// <summary>
@@ -37,17 +41,50 @@ namespace LibOpenNFS.Games.MW.Database
         public void Read(BinaryReader reader)
         {
             reader.BaseStream.Position = _file.FileHeader.VaultLocation;
-            
+
             _vltReader = new BinaryReader(
                 new MemoryStream(reader.ReadBytes(_file.FileHeader.VaultLength)));
 
             reader.BaseStream.Position = _file.FileHeader.BinLocation;
-            
+
             _binReader = new BinaryReader(
                 new MemoryStream(reader.ReadBytes(_file.FileHeader.BinLength)));
-            
+
             InternalVaultRead();
             InternalBinRead();
+
+            if (FindBlock(VltMarker.TableStart) is TableStartBlock tsb
+                && FindBlock(VltMarker.TableEnd) is TableEndBlock teb)
+            {
+                foreach (var t in tsb.TableEntries)
+                {
+                    switch (t.EntryType)
+                    {
+                        case EntryType.Root:
+                        {
+                            _classManager.Init(t.Record.AsRoot(), teb, _binReader);
+                            break;
+                        }
+                        case EntryType.Class:
+                        {
+                            _classManager.Init(t.Record.AsClass(), teb, _binReader);
+                            break;
+                        }
+                        case EntryType.Row:
+                        {
+                            var rowRecord = t.Record.AsRow();
+                            var vltClass = _classManager.Classes[rowRecord.Unknown1];
+                            var fieldManager = new VltClass.FieldManager(vltClass);
+                            
+                            fieldManager.Init(rowRecord, teb, _vltReader, _binReader);
+                            
+                            break;
+                        }
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -55,13 +92,22 @@ namespace LibOpenNFS.Games.MW.Database
         /// </summary>
         private void InternalVaultRead()
         {
-            VltBlock block;
+            VltBlockContainer block;
 
             while ((block = ReadBlock(_vltReader)) != null)
             {
                 _blocks.Add(block);
-                
-                Console.WriteLine($"block type {block.Type} @ 0x{block.Position:X8} ({block.BlockLength} bytes)");
+
+                Console.WriteLine(
+                    $"block type {block.Block.Type} @ 0x{block.Block.Position:X8} ({block.Block.BlockLength} bytes)");
+            }
+
+            if (FindBlock(VltMarker.TableStart) is TableStartBlock tsb)
+            {
+                foreach (var t in tsb.TableEntries)
+                {
+                    t.InitRecord(_vltReader);
+                }
             }
         }
 
@@ -73,13 +119,13 @@ namespace LibOpenNFS.Games.MW.Database
             var block = ReadBlock(_binReader);
 
             DebugUtil.EnsureCondition(
-                block.Type == VltType.BinMagic,
-                () => $"Expected BinMagic, got {block.Type}"
+                block.Block.Type == VltMarker.BinMagic,
+                () => $"Expected BinMagic, got {block.Block.Type}"
             );
-            
-            block.SeekToDataStart(_binReader.BaseStream);
 
-            var runTo = _binReader.BaseStream.Position + block.DataSize();
+            block.Block.SeekToDataStart(_binReader.BaseStream);
+
+            var runTo = _binReader.BaseStream.Position + block.Block.DataSize();
 
             while (_binReader.BaseStream.Position < runTo)
             {
@@ -92,7 +138,7 @@ namespace LibOpenNFS.Games.MW.Database
                     if (!_hashDictionary.ContainsKey(hash))
                     {
                         _hashDictionary.Add(hash, text);
-                        
+
                         Console.WriteLine($"0x{hash:X8} -> {text}");
                     }
                 }
@@ -104,35 +150,38 @@ namespace LibOpenNFS.Games.MW.Database
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        private VltBlock FindBlock(VltType type) => _blocks.Find(b => b.Type == type);
-        
-        private VltBlock ReadBlock(BinaryReader reader)
+        private VltBlockContainer FindBlock(VltMarker type) => _blocks.Find(b => b.Block.Type == type);
+
+        private VltBlockContainer ReadBlock(BinaryReader reader)
         {
             if (reader.BaseStream.Position == reader.BaseStream.Length)
             {
                 return null;
             }
-            
+
             var block = new VltBlock
-            {    
+            {
                 Position = reader.BaseStream.Position,
-                Type = (VltType) reader.ReadInt32(),
+                Type = (VltMarker) reader.ReadInt32(),
                 BlockLength = reader.ReadInt32(),
             };
-            
+
             if (!block.IsBlank())
             {
                 var vltType = block.Type;
-                
+
                 VltBlockContainer bc;
 
                 switch (vltType)
                 {
-                    case VltType.VltMagic:
+                    case VltMarker.VltMagic:
                         bc = new HeaderBlock();
                         break;
-                    case VltType.TableStart:
+                    case VltMarker.TableStart:
                         bc = new TableStartBlock();
+                        break;
+                    case VltMarker.TableEnd:
+                        bc = new TableEndBlock();
                         break;
                     default:
                         bc = new PlaceholderBlock();
@@ -143,9 +192,9 @@ namespace LibOpenNFS.Games.MW.Database
                 bc.Read(reader);
                 block.SeekToNextBlock(reader.BaseStream);
 
-                return block;
+                return bc;
             }
-            
+
             return null;
         }
 

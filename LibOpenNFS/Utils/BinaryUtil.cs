@@ -15,6 +15,25 @@ namespace LibOpenNFS.Utils
         private const string FullPrecision = "0.############################################################";
 
         /// <summary>
+        /// Extension method for <see cref="BinaryReader"/> to read an array of an arbitrary type.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="count"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T[] ReadArray<T>(this BinaryReader reader, int count)
+        {
+            var result = new T[count];
+
+            for (var i = 0; i < count; ++i)
+            {
+                result[i] = ReadStruct<T>(reader);
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
         /// Formats a float value to a string, with full precision.
         /// </summary>
         /// <param name="f"></param>

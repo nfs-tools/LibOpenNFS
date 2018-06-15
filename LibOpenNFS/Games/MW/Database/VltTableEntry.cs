@@ -19,6 +19,8 @@ namespace LibOpenNFS.Games.MW.Database
         private int _empty2;
 
         public int Address;
+
+        public VltRecord Record;
         
         public void Read(BinaryReader br)
         {
@@ -29,6 +31,15 @@ namespace LibOpenNFS.Games.MW.Database
             // Not sure how this works yet
             _empty2 = _empty != 0 ? _empty : br.ReadInt32();
             Address = br.ReadInt32();
+        }
+
+        public void InitRecord(BinaryReader br)
+        {
+            br.BaseStream.Seek(Address, SeekOrigin.Begin);
+            
+            Record = VltRecord.GetRecord(EntryType);
+            Record.TableEntry = this;
+            Record.Read(br);
         }
 
         public void Write(BinaryWriter bw)
