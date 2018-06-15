@@ -20,8 +20,6 @@ namespace LibOpenNFS.Games.MW.Database
 
         private readonly Dictionary<uint, string> _hashDictionary;
 
-        private readonly VltClass.ClassManager _classManager;
-
         /// <summary>
         /// Initialize the reader
         /// </summary>
@@ -31,7 +29,6 @@ namespace LibOpenNFS.Games.MW.Database
             _file = file;
             _blocks = new List<VltBlockContainer>();
             _hashDictionary = new Dictionary<uint, string>();
-            _classManager = new VltClass.ClassManager();
         }
 
         /// <summary>
@@ -62,18 +59,18 @@ namespace LibOpenNFS.Games.MW.Database
                     {
                         case EntryType.Root:
                         {
-                            _classManager.Init(t.Record.AsRoot(), teb, _binReader);
+                            VltClass.ClassManager.Instance.Init(t.Record.AsRoot(), teb, _binReader);
                             break;
                         }
                         case EntryType.Class:
                         {
-                            _classManager.Init(t.Record.AsClass(), teb, _binReader);
+                            VltClass.ClassManager.Instance.Init(t.Record.AsClass(), teb, _binReader);
                             break;
                         }
                         case EntryType.Row:
                         {
                             var rowRecord = t.Record.AsRow();
-                            var vltClass = _classManager.Classes[rowRecord.Unknown1];
+                            var vltClass = VltClass.ClassManager.Instance.Classes[rowRecord.Unknown1];
                             var fieldManager = new VltClass.FieldManager(vltClass);
                             
                             fieldManager.Init(rowRecord, teb, _vltReader, _binReader);

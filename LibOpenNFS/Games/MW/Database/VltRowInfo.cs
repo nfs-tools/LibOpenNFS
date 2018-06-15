@@ -3,7 +3,7 @@ using LibOpenNFS.Utils;
 
 namespace LibOpenNFS.Games.MW.Database
 {
-    public class VltUnknown : IBinReadWrite
+    public class VltRowInfo : IBinReadWrite
     {
         public int Address;
         public short Unknown2;

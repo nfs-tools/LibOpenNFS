@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using LibOpenNFS.Bundles;
 using LibOpenNFS.Games.MW.Database;
 using LibOpenNFS.Utils;
@@ -7,8 +8,9 @@ namespace LibOpenNFS.Games.MW
 {
     public class MWDatabaseReader : DatabaseReader
     {
-        public MWDatabaseReader(string file) : base(file)
+        public MWDatabaseReader(string file, bool bigEndian = false) : base(file)
         {
+            _isBigEndian = bigEndian;
         }
 
         public override void Read()
@@ -38,11 +40,17 @@ namespace LibOpenNFS.Games.MW
                 
                 Console.WriteLine($"File #{i + 1}: {files[i].Name}");
             }
+            
+            // Sort by priority
+            // gpcore is the only vault that needs this
 
-            foreach (var file in files)
+            foreach (var file in files.OrderByDescending(f => string.Equals(f.Name, "gpcore")))
             {
+                Console.WriteLine($"Reading: {file}");
                 new FileReader(file).Read(Reader);
             }
         }
+
+        private bool _isBigEndian;
     }
 }

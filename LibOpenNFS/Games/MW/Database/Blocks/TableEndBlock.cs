@@ -6,66 +6,66 @@ namespace LibOpenNFS.Games.MW.Database.Blocks
 {
     public class TableEndBlock : VltBlockContainer
     {
-        private List<VltUnknown> _unknownList;
-        private List<VltUnknown> _unknownList2;
+        private List<VltRowInfo> _unknownList;
+        private List<VltRowInfo> _unknownList2;
 
-        public Dictionary<int, VltUnknown> UnknownDictionary;
+        public Dictionary<int, VltRowInfo> UnknownDictionary;
         
         public override void Read(BinaryReader reader)
         {
-            _unknownList = new List<VltUnknown>();
-            _unknownList2 = new List<VltUnknown>();
+            _unknownList = new List<VltRowInfo>();
+            _unknownList2 = new List<VltRowInfo>();
             
-            UnknownDictionary = new Dictionary<int, VltUnknown>();
+            UnknownDictionary = new Dictionary<int, VltRowInfo>();
 
             var unknownFlag = false;
 
-            VltUnknown unknown;
+            VltRowInfo rowInfo;
 
             while (true)
             {
-                unknown = new VltUnknown();
-                unknown.Read(reader);
+                rowInfo = new VltRowInfo();
+                rowInfo.Read(reader);
                 
-                _unknownList.Add(unknown);
+                _unknownList.Add(rowInfo);
 
-                if (unknown.Unknown2 == 2 && (unknown.Unknown3 == 0 || unknown.Unknown3 == 1))
+                if (rowInfo.Unknown2 == 2 && (rowInfo.Unknown3 == 0 || rowInfo.Unknown3 == 1))
                 {
-                    unknownFlag = unknown.Unknown3 == 0;
+                    unknownFlag = rowInfo.Unknown3 == 0;
                 }
                 else
                 {
-                    if (unknown.Unknown2 == 1)
+                    if (rowInfo.Unknown2 == 1)
                     {
                         if (unknownFlag)
                         {
-                            UnknownDictionary[unknown.Address] = unknown;
+                            UnknownDictionary[rowInfo.Address] = rowInfo;
                         }
                         else
                         {
-                            _unknownList2.Add(unknown);
+                            _unknownList2.Add(rowInfo);
                         }
                     }
                     else
                     {
-                        if (unknown.Unknown2 != 3 || unknown.Unknown3 != 1)
+                        if (rowInfo.Unknown2 != 3 || rowInfo.Unknown3 != 1)
                         {
                             break;
                         }
 
                         if (unknownFlag)
                         {
-                            UnknownDictionary[unknown.Address] = unknown;
+                            UnknownDictionary[rowInfo.Address] = rowInfo;
                         }
                         else
                         {
-                            _unknownList2.Add(unknown);
+                            _unknownList2.Add(rowInfo);
                         }
                     }
                 }
             }
 
-            if (unknown.Address != 0)
+            if (rowInfo.Address != 0)
             {
                 throw new Exception("Unknown pointer type");
             }

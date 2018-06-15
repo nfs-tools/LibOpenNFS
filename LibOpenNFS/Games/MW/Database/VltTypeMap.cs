@@ -9,7 +9,7 @@ namespace LibOpenNFS.Games.MW.Database
     {
         private readonly Dictionary<uint, Type> _typeDictionary;
 
-        public static VltTypeMap Instance = new VltTypeMap();
+        public static readonly VltTypeMap Instance = new VltTypeMap();
 
         private VltTypeMap()
         {
@@ -26,6 +26,15 @@ namespace LibOpenNFS.Games.MW.Database
                     {JenkinsHash.getHash32("EA::Reflection::UInt64"), typeof(EaUInt64)},
                     {JenkinsHash.getHash32("EA::Reflection::Bool"), typeof(EaBoolean)},
                     {JenkinsHash.getHash32("EA::Reflection::Float"), typeof(EaFloat)},
+                    {JenkinsHash.getHash32("EA::Reflection::Double"), typeof(EaDouble)},
+                    {JenkinsHash.getHash32("EA::Reflection::Text"), typeof(EaText)},
+                    {JenkinsHash.getHash32("Attrib::RefSpec"), typeof(RefSpec)},
+                    {JenkinsHash.getHash32("Attrib::StringKey"), typeof(StringKey)},
+                    {JenkinsHash.getHash32("Attrib::Types::Matrix"), typeof(Matrix)},
+                    {JenkinsHash.getHash32("Attrib::Types::Vector2"), typeof(Vector2)},
+                    {JenkinsHash.getHash32("Attrib::Types::Vector3"), typeof(Vector3)},
+                    {JenkinsHash.getHash32("Attrib::Types::Vector4"), typeof(Vector4)},
+                    {JenkinsHash.getHash32("GCollectionKey"), typeof(CollectionKey)},
                 };
         }
 

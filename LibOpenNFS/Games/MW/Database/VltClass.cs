@@ -36,16 +36,17 @@ namespace LibOpenNFS.Games.MW.Database
             /// <returns></returns>
             public VltInfo Find(uint hash) => _infoList.Find(i => i.RowRecord.Hash == hash);
 
-            public void Init(VltRowRecord rowRecord, TableEndBlock block, BinaryReader vltReader, BinaryReader binReader)
+            public void Init(VltRowRecord rowRecord, TableEndBlock block, BinaryReader vltReader,
+                BinaryReader binReader)
             {
                 var info = new VltInfo(_vltClass.ClassRecord.NumFields);
-                
+
                 DebugUtil.EnsureCondition(
                     block.UnknownDictionary.ContainsKey(rowRecord.Position),
                     () => "Uh oh.");
 
                 var basePosition = block.UnknownDictionary[rowRecord.Position].Address2;
-                
+
                 info.BlockContainer = block;
                 info.Class = _vltClass;
                 info.RowRecord = rowRecord;
@@ -57,7 +58,6 @@ namespace LibOpenNFS.Games.MW.Database
 
                     if (!field.UnknownMeaning())
                     {
-                        Console.WriteLine(@"!UnknownMeaning");
                         br = binReader;
                         br.BaseStream.Seek(basePosition + field.Unknown2, SeekOrigin.Begin);
                     }
@@ -71,13 +71,11 @@ namespace LibOpenNFS.Games.MW.Database
                             {
                                 if (row.IsInVlt())
                                 {
-                                    Console.WriteLine(@"IsInVlt = true");
                                     br = vltReader;
                                     br.BaseStream.Seek(row.Position, SeekOrigin.Begin);
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Not in VLT");
                                     br = binReader;
                                     br.BaseStream.Seek(block.UnknownDictionary[row.Position].Address2,
                                         SeekOrigin.Begin);
@@ -89,7 +87,6 @@ namespace LibOpenNFS.Games.MW.Database
                         {
                             continue;
                         }
-//                        br.BaseStream.Seek(block.UnknownDictionary[rowRecord.Position].Address2, SeekOrigin.Begin);
                     }
 
                     var type = VltTypeMap.Instance.GetTypeForKey(field.TypeHash);
@@ -99,12 +96,21 @@ namespace LibOpenNFS.Games.MW.Database
                         type = typeof(RawType);
                     }
 
-                    var vltType = VltType.Create(type);
-                    vltType.Size = field.Length;
+                    VltType vltType;
 
-                    if (vltType is RawType rt)
+                    if (field.IsArray())
                     {
-                        rt.Length = field.Length;
+                        vltType = new ArrayType(field, type);
+                    }
+                    else
+                    {
+                        vltType = VltType.Create(type);
+                        vltType.Size = field.Length;
+
+                        if (vltType is RawType rt)
+                        {
+                            rt.Length = field.Length;
+                        }
                     }
 
                     vltType.Address = (uint) br.BaseStream.Position;
@@ -114,14 +120,27 @@ namespace LibOpenNFS.Games.MW.Database
                     vltType.Info = info;
                     vltType.Read(br);
 
-                    if (!(vltType is RawType))
+                    if (vltType is ArrayType va)
                     {
-                        Console.WriteLine($"Class: 0x{_vltClass.Hash:X8} | Field: 0x{field.Hash:X8} | {vltType.GetType().FullName} -> {vltType}");
+                        Console.WriteLine($"Class: 0x{_vltClass.Hash:X8} | Field: 0x{field.Hash:X8} | Array of {va.Type} (original: 0x{field.TypeHash:X8}) with {va.Entries}/{va.MaxEntries} entries");
+
+                        foreach (var av in va.Types)
+                        {
+                            Console.WriteLine($"\tValue: {av}");
+                        }
                     }
-                    
+                    else
+                    {
+                        if (!(vltType is RawType))
+                        {
+                            Console.WriteLine(
+                                $"Class: 0x{_vltClass.Hash:X8} | Field: 0x{field.Hash:X8} | {vltType.GetType()} -> {vltType}");
+                        }
+                    }
+
                     info.Set(i, vltType);
                 }
-                
+
                 _infoList.Add(info);
             }
 
@@ -141,22 +160,50 @@ namespace LibOpenNFS.Games.MW.Database
             public class ManagedClass
             {
                 public uint Hash { get; set; }
-                
+
                 public string Value { get; set; }
-                
+
                 public int Unknown { get; set; }
             }
 
             private Dictionary<uint, ManagedClass> _managedClasses;
 
-            public Dictionary<uint, VltClass> Classes { get; private set; }
+            public Dictionary<uint, VltClass> Classes { get; }
             
+            private static ClassManager _instance;
+
+            private static readonly object InstanceLock = new object();
+
+            public static ClassManager Instance
+            {
+                get
+                {
+                    if (_instance == null)
+                    {
+                        lock (InstanceLock)
+                        {
+                            if (_instance == null)
+                            {
+                                _instance = new ClassManager();
+                            }
+                        }
+                    }
+
+                    return _instance;
+                }
+            }
+            
+            private ClassManager()
+            {
+                Classes = new Dictionary<uint, VltClass>();
+            }
+
             public void Init(VltRootRecord rootRecord, TableEndBlock teb, BinaryReader br)
             {
                 var position = teb.UnknownDictionary[rootRecord.Position].Address2;
 
                 br.BaseStream.Seek(position, SeekOrigin.Begin);
-                
+
                 _managedClasses = new Dictionary<uint, ManagedClass>(rootRecord.NumEntries);
 
                 for (var i = 0; i < rootRecord.NumEntries; ++i)
@@ -166,13 +213,12 @@ namespace LibOpenNFS.Games.MW.Database
                         Value = BinaryUtil.ReadNullTerminatedString(br),
                         Unknown = rootRecord.Hashes[i]
                     };
-                    
+
                     mc.Hash = JenkinsHash.getHash32(mc.Value);
-                    
+
                     _managedClasses.Add(mc.Hash, mc);
                 }
-                
-                Classes = new Dictionary<uint, VltClass>();
+
             }
 
             public void Init(VltClassRecord classRecord, TableEndBlock teb, BinaryReader br)
@@ -181,7 +227,7 @@ namespace LibOpenNFS.Games.MW.Database
                 vc.Init(classRecord, teb, br);
                 Classes.Add(vc.Hash, vc);
             }
-            
+
             public IEnumerator<VltClass> GetEnumerator()
             {
                 return Classes.Values.GetEnumerator();
@@ -196,7 +242,7 @@ namespace LibOpenNFS.Games.MW.Database
         /// <summary>
         /// The field structure for a VLT class
         /// </summary>
-        public class VltClassField : IBinReadWrite
+        public class Field : IBinReadWrite
         {
             public uint Hash { get; set; }
 
@@ -241,7 +287,7 @@ namespace LibOpenNFS.Games.MW.Database
 
         public VltClassRecord ClassRecord { get; private set; }
 
-        public VltClassField[] Fields { get; private set; }
+        public Field[] Fields { get; private set; }
 
         public void Init(VltClassRecord classRecord, VltBlockContainer blockContainer, BinaryReader br)
         {
@@ -255,11 +301,11 @@ namespace LibOpenNFS.Games.MW.Database
 
                 br.BaseStream.Seek(position, SeekOrigin.Begin);
 
-                Fields = new VltClassField[ClassRecord.NumFields];
+                Fields = new Field[ClassRecord.NumFields];
 
                 for (var i = 0; i < ClassRecord.NumFields; ++i)
                 {
-                    Fields[i] = new VltClassField();
+                    Fields[i] = new Field();
                     Fields[i].Read(br);
                 }
             }
