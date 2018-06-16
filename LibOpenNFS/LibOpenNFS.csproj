@@ -117,6 +117,9 @@
     <Compile Include="VFS\VfsResource.cs" />
     <Compile Include="VFS\VfsUtils.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Games\ProStreet" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

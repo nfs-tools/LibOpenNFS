@@ -41,10 +41,7 @@ namespace LibOpenNFS.Games.MW
                 Console.WriteLine($"File #{i + 1}: {files[i].Name}");
             }
             
-            // Sort by priority
-            // gpcore is the only vault that needs this
-
-            foreach (var file in files.OrderByDescending(f => string.Equals(f.Name, "gpcore")))
+            foreach (var file in files)
             {
                 Console.WriteLine($"Reading: {file}");
                 new FileReader(file).Read(Reader);

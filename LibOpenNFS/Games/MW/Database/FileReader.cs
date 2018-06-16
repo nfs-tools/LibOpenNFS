@@ -95,8 +95,8 @@ namespace LibOpenNFS.Games.MW.Database
             {
                 _blocks.Add(block);
 
-                Console.WriteLine(
-                    $"block type {block.Block.Type} @ 0x{block.Block.Position:X8} ({block.Block.BlockLength} bytes)");
+//                Console.WriteLine(
+//                    $"block type {block.Block.Type} @ 0x{block.Block.Position:X8} ({block.Block.BlockLength} bytes)");
             }
 
             if (FindBlock(VltMarker.TableStart) is TableStartBlock tsb)
@@ -136,7 +136,7 @@ namespace LibOpenNFS.Games.MW.Database
                     {
                         _hashDictionary.Add(hash, text);
 
-                        Console.WriteLine($"0x{hash:X8} -> {text}");
+//                        Console.WriteLine($"0x{hash:X8} -> {text}");
                     }
                 }
             }

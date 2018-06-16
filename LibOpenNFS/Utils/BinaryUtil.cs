@@ -32,9 +32,79 @@ namespace LibOpenNFS.Utils
             
             return result;
         }
+
+        /// <summary>
+        /// Read a big-endian float.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static float ReadFloatBE(this BinaryReader reader)
+        {
+            return BitConverter.ToSingle(reader.ReadBytes(4), 0);
+        }
         
         /// <summary>
-        /// Formats a float value to a string, with full precision.
+        /// Read a big-endian 64-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static long ReadInt64BE(this BinaryReader reader)
+        {
+            return BitConverter.ToInt64(reader.ReadBytes(8), 0);
+        }
+        
+        /// <summary>
+        /// Read a big-endian 32-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static int ReadInt32BE(this BinaryReader reader)
+        {
+            return BitConverter.ToInt32(reader.ReadBytes(4), 0);
+        }
+        
+        /// <summary>
+        /// Read a big-endian 16-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static short ReadInt16BE(this BinaryReader reader)
+        {
+            return BitConverter.ToInt16(reader.ReadBytes(2), 0);
+        }
+        
+        /// <summary>
+        /// Read a big-endian unsigned 64-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static ulong ReadUInt64BE(this BinaryReader reader)
+        {
+            return BitConverter.ToUInt64(reader.ReadBytes(8), 0);
+        }
+        
+        /// <summary>
+        /// Read a big-endian unsigned 32-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static uint ReadUInt32BE(this BinaryReader reader)
+        {
+            return BitConverter.ToUInt32(reader.ReadBytes(4), 0);
+        }
+        
+        /// <summary>
+        /// Read a big-endian unsigned 16-bit integer.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static ushort ReadUInt16BE(this BinaryReader reader)
+        {
+            return BitConverter.ToUInt16(reader.ReadBytes(2), 0);
+        }
+        
+        /// <summary>
+        /// Formats a float value as a string, with full precision.
         /// </summary>
         /// <param name="f"></param>
         /// <returns></returns>

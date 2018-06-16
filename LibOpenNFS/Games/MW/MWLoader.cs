@@ -69,8 +69,8 @@ namespace LibOpenNFS.Games.MW
 
         public void LoadDatabase()
         {
-            new MWDatabaseReader(Path.Combine(_directory, "GLOBAL", "attributes_xbox.bin")).Read();
-//            new MWDatabaseReader(Path.Combine(_directory, "GLOBAL", "gameplay.bin")).Read();
+            new MWDatabaseReader(Path.Combine(_directory, "GLOBAL", "attributes.bin")).Read();
+            new MWDatabaseReader(Path.Combine(_directory, "GLOBAL", "gameplay.bin")).Read();
         }
 
         public void LoadFile(string file)
