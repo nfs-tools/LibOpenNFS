@@ -34,7 +34,11 @@ namespace LibOpenNFS.Games.MW.Database
                     {JenkinsHash.getHash32("Attrib::Types::Vector2"), typeof(Vector2)},
                     {JenkinsHash.getHash32("Attrib::Types::Vector3"), typeof(Vector3)},
                     {JenkinsHash.getHash32("Attrib::Types::Vector4"), typeof(Vector4)},
+                    {JenkinsHash.getHash32("Attrib::Blob"), typeof(Blob)},
                     {JenkinsHash.getHash32("GCollectionKey"), typeof(CollectionKey)},
+                    {JenkinsHash.getHash32("AirSupport"), typeof(AirSupport)},
+                    {JenkinsHash.getHash32("AxlePair"), typeof(AxlePair)},
+                    
                 };
         }
 

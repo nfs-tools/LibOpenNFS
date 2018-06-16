@@ -42,10 +42,10 @@ namespace LibOpenNFS.Games.MW.Database
                 var info = new VltInfo(_vltClass.ClassRecord.NumFields);
 
                 DebugUtil.EnsureCondition(
-                    block.UnknownDictionary.ContainsKey(rowRecord.Position),
+                    block.InfoDictionary.ContainsKey(rowRecord.Position),
                     () => "Uh oh.");
 
-                var basePosition = block.UnknownDictionary[rowRecord.Position].Address2;
+                var basePosition = block.InfoDictionary[rowRecord.Position].Address2;
 
                 info.BlockContainer = block;
                 info.Class = _vltClass;
@@ -59,7 +59,7 @@ namespace LibOpenNFS.Games.MW.Database
                     if (!field.UnknownMeaning())
                     {
                         br = binReader;
-                        br.BaseStream.Seek(basePosition + field.Unknown2, SeekOrigin.Begin);
+                        br.BaseStream.Seek(basePosition + field.Offset, SeekOrigin.Begin);
                     }
                     else
                     {
@@ -77,7 +77,7 @@ namespace LibOpenNFS.Games.MW.Database
                                 else
                                 {
                                     br = binReader;
-                                    br.BaseStream.Seek(block.UnknownDictionary[row.Position].Address2,
+                                    br.BaseStream.Seek(block.InfoDictionary[row.Position].Address2,
                                         SeekOrigin.Begin);
                                 }
                             }
@@ -155,90 +155,6 @@ namespace LibOpenNFS.Games.MW.Database
             }
         }
 
-        public class ClassManager : IEnumerable<VltClass>
-        {
-            public class ManagedClass
-            {
-                public uint Hash { get; set; }
-
-                public string Value { get; set; }
-
-                public int Unknown { get; set; }
-            }
-
-            private Dictionary<uint, ManagedClass> _managedClasses;
-
-            public Dictionary<uint, VltClass> Classes { get; }
-            
-            private static ClassManager _instance;
-
-            private static readonly object InstanceLock = new object();
-
-            public static ClassManager Instance
-            {
-                get
-                {
-                    if (_instance == null)
-                    {
-                        lock (InstanceLock)
-                        {
-                            if (_instance == null)
-                            {
-                                _instance = new ClassManager();
-                            }
-                        }
-                    }
-
-                    return _instance;
-                }
-            }
-            
-            private ClassManager()
-            {
-                Classes = new Dictionary<uint, VltClass>();
-            }
-
-            public void Init(VltRootRecord rootRecord, TableEndBlock teb, BinaryReader br)
-            {
-                var position = teb.UnknownDictionary[rootRecord.Position].Address2;
-
-                br.BaseStream.Seek(position, SeekOrigin.Begin);
-
-                _managedClasses = new Dictionary<uint, ManagedClass>(rootRecord.NumEntries);
-
-                for (var i = 0; i < rootRecord.NumEntries; ++i)
-                {
-                    var mc = new ManagedClass
-                    {
-                        Value = BinaryUtil.ReadNullTerminatedString(br),
-                        Unknown = rootRecord.Hashes[i]
-                    };
-
-                    mc.Hash = JenkinsHash.getHash32(mc.Value);
-
-                    _managedClasses.Add(mc.Hash, mc);
-                }
-
-            }
-
-            public void Init(VltClassRecord classRecord, TableEndBlock teb, BinaryReader br)
-            {
-                var vc = new VltClass();
-                vc.Init(classRecord, teb, br);
-                Classes.Add(vc.Hash, vc);
-            }
-
-            public IEnumerator<VltClass> GetEnumerator()
-            {
-                return Classes.Values.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-        }
-
         /// <summary>
         /// The field structure for a VLT class
         /// </summary>
@@ -248,7 +164,7 @@ namespace LibOpenNFS.Games.MW.Database
 
             public uint TypeHash { get; set; }
 
-            public ushort Unknown2 { get; set; }
+            public ushort Offset { get; set; }
 
             public ushort Length { get; set; }
 
@@ -268,7 +184,7 @@ namespace LibOpenNFS.Games.MW.Database
             {
                 Hash = br.ReadUInt32();
                 TypeHash = br.ReadUInt32();
-                Unknown2 = br.ReadUInt16();
+                Offset = br.ReadUInt16();
                 Length = br.ReadUInt16();
                 Count = br.ReadInt16();
                 Flag1 = br.ReadByte();
@@ -289,6 +205,14 @@ namespace LibOpenNFS.Games.MW.Database
 
         public Field[] Fields { get; private set; }
 
+
+        private readonly FieldManager _fieldManager;
+        
+        public VltClass()
+        {
+            _fieldManager = new FieldManager(this);
+        }
+        
         public void Init(VltClassRecord classRecord, VltBlockContainer blockContainer, BinaryReader br)
         {
             ClassRecord = classRecord;
@@ -297,7 +221,7 @@ namespace LibOpenNFS.Games.MW.Database
 
             if (blockContainer is TableEndBlock teb)
             {
-                var position = teb.UnknownDictionary[classRecord.Position].Address2;
+                var position = teb.InfoDictionary[classRecord.Position].Address2;
 
                 br.BaseStream.Seek(position, SeekOrigin.Begin);
 
@@ -310,6 +234,8 @@ namespace LibOpenNFS.Games.MW.Database
                 }
             }
         }
+
+        public FieldManager GetFieldManager() => _fieldManager;
 
         public int FindFieldIndex(uint hash) => Array.IndexOf(Fields, Fields.First(f => f.Hash == hash));
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using LibOpenNFS.Games.MW.Database.Blocks;
 using LibOpenNFS.Games.MW.Database.Table;
+using LibOpenNFS.Games.MW.Database.Tree;
 using LibOpenNFS.Utils;
 
 namespace LibOpenNFS.Games.MW.Database
@@ -18,8 +19,6 @@ namespace LibOpenNFS.Games.MW.Database
         private BinaryReader _vltReader;
         private BinaryReader _binReader;
 
-        private readonly Dictionary<uint, string> _hashDictionary;
-
         /// <summary>
         /// Initialize the reader
         /// </summary>
@@ -28,7 +27,6 @@ namespace LibOpenNFS.Games.MW.Database
         {
             _file = file;
             _blocks = new List<VltBlockContainer>();
-            _hashDictionary = new Dictionary<uint, string>();
         }
 
         /// <summary>
@@ -59,28 +57,68 @@ namespace LibOpenNFS.Games.MW.Database
                     {
                         case EntryType.Root:
                         {
-                            VltClass.ClassManager.Instance.Init(t.Record.AsRoot(), teb, _binReader);
+                            VltClassManager.Instance.Init(t.Record.AsRoot(), teb, _binReader);
                             break;
                         }
                         case EntryType.Class:
                         {
-                            VltClass.ClassManager.Instance.Init(t.Record.AsClass(), teb, _binReader);
+                            VltClassManager.Instance.Init(t.Record.AsClass(), teb, _binReader);
                             break;
                         }
                         case EntryType.Row:
                         {
                             var rowRecord = t.Record.AsRow();
-                            var vltClass = VltClass.ClassManager.Instance.Classes[rowRecord.Unknown1];
-                            var fieldManager = new VltClass.FieldManager(vltClass);
-                            
-                            fieldManager.Init(rowRecord, teb, _vltReader, _binReader);
-                            
+                            var vltClass = VltClassManager.Instance.Classes[rowRecord.Unknown1];
+
+                            vltClass.GetFieldManager().Init(rowRecord, teb, _vltReader, _binReader);
+
                             break;
                         }
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
                 }
+            }
+            
+            var itemDictionary = new Dictionary<string, Tree<VltTreeItem>.TreeItem>();
+
+            // pretty print
+            foreach (var vltClass in VltClassManager.Instance)
+            {
+                var classNode = new Tree<VltTreeItem>.TreeItem(new VltClassItem(vltClass));
+
+                // First pass to create top-level elements
+                foreach (var info in vltClass.GetFieldManager())
+                {
+                    if (info.RowRecord.ParentHash == 0)
+                    {
+                        var key = $"{vltClass.Hash:X8}::{info.RowRecord.Hash:X8}";
+
+                        var vltTreeItem = new VltRowItem(info.RowRecord);
+                        
+                        itemDictionary.Add(key, classNode.AddSubItem(vltTreeItem));
+                    }
+                }
+
+                // Second pass for nested items
+                foreach (var info in vltClass.GetFieldManager())
+                {
+                    if (info.RowRecord.ParentHash != 0)
+                    {
+                        var key = $"{vltClass.Hash:X8}::{info.RowRecord.ParentHash:X8}";
+                        var lastItem = itemDictionary[key];
+
+                        var vltTreeItem = new VltRowItem(info.RowRecord);
+
+                        lastItem = lastItem.AddSubItem(vltTreeItem);
+                        
+                        var newKey = $"{vltClass.Hash:X8}::{info.RowRecord.Hash:X8}";
+                        
+                        itemDictionary.Add(newKey, lastItem);
+                    }
+                }
+                
+                VltTreeManager.Instance.Tree.Items.Add(classNode);
             }
         }
 
@@ -130,14 +168,7 @@ namespace LibOpenNFS.Games.MW.Database
 
                 if (text.Length > 0)
                 {
-                    var hash = JenkinsHash.getHash32(text);
-
-                    if (!_hashDictionary.ContainsKey(hash))
-                    {
-                        _hashDictionary.Add(hash, text);
-
-//                        Console.WriteLine($"0x{hash:X8} -> {text}");
-                    }
+                    HashManager.AddHash(text);
                 }
             }
         }

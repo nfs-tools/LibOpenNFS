@@ -47,7 +47,7 @@ namespace LibOpenNFS.Games.MW.Database.Table
 
         public uint Unknown1 { get; set; }
 
-        public uint Unknown2 { get; set; }
+        public uint ParentHash { get; set; }
 
         public int Unknown3 { get; set; }
 
@@ -71,7 +71,7 @@ namespace LibOpenNFS.Games.MW.Database.Table
         {
             Hash = br.ReadUInt32();
             Unknown1 = br.ReadUInt32();
-            Unknown2 = br.ReadUInt32();
+            ParentHash = br.ReadUInt32();
             Unknown3 = br.ReadInt32();
             Unknown4 = br.ReadInt32();
             Unknown5 = br.ReadInt32();

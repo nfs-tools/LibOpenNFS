@@ -9,14 +9,14 @@ namespace LibOpenNFS.Games.MW.Database.Blocks
         private List<VltRowInfo> _unknownList;
         private List<VltRowInfo> _unknownList2;
 
-        public Dictionary<int, VltRowInfo> UnknownDictionary;
+        public Dictionary<int, VltRowInfo> InfoDictionary;
         
         public override void Read(BinaryReader reader)
         {
             _unknownList = new List<VltRowInfo>();
             _unknownList2 = new List<VltRowInfo>();
             
-            UnknownDictionary = new Dictionary<int, VltRowInfo>();
+            InfoDictionary = new Dictionary<int, VltRowInfo>();
 
             var unknownFlag = false;
 
@@ -39,7 +39,7 @@ namespace LibOpenNFS.Games.MW.Database.Blocks
                     {
                         if (unknownFlag)
                         {
-                            UnknownDictionary[rowInfo.Address] = rowInfo;
+                            InfoDictionary[rowInfo.Address] = rowInfo;
                         }
                         else
                         {
@@ -55,7 +55,7 @@ namespace LibOpenNFS.Games.MW.Database.Blocks
 
                         if (unknownFlag)
                         {
-                            UnknownDictionary[rowInfo.Address] = rowInfo;
+                            InfoDictionary[rowInfo.Address] = rowInfo;
                         }
                         else
                         {

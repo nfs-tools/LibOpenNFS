@@ -41,11 +41,13 @@ namespace LibOpenNFS.Games.MW
                 Console.WriteLine($"File #{i + 1}: {files[i].Name}");
             }
             
-            foreach (var file in files)
+            foreach (var file in files.OrderByDescending(f => string.Equals(f.Name, "gpcore")))
             {
                 Console.WriteLine($"Reading: {file}");
                 new FileReader(file).Read(Reader);
             }
+            
+            VltTreeManager.Instance.Tree.PrintItems();
         }
 
         private bool _isBigEndian;

@@ -57,11 +57,18 @@
     <Compile Include="Games\MW\Database\Blocks\TableStartBlock.cs" />
     <Compile Include="Games\MW\Database\FileHeader.cs" />
     <Compile Include="Games\MW\Database\FileReader.cs" />
+    <Compile Include="Games\MW\Database\HashManager.cs" />
     <Compile Include="Games\MW\Database\Table\VltClassRecord.cs" />
     <Compile Include="Games\MW\Database\Table\VltEntryType.cs" />
     <Compile Include="Games\MW\Database\Table\VltRecord.cs" />
     <Compile Include="Games\MW\Database\Table\VltRootRecord.cs" />
     <Compile Include="Games\MW\Database\Table\VltRowRecord.cs" />
+    <Compile Include="Games\MW\Database\Tree\VltClassItem.cs" />
+    <Compile Include="Games\MW\Database\Tree\VltRowItem.cs" />
+    <Compile Include="Games\MW\Database\Tree\VltTreeItem.cs" />
+    <Compile Include="Games\MW\Database\Types\AirSupport.cs" />
+    <Compile Include="Games\MW\Database\Types\AxlePair.cs" />
+    <Compile Include="Games\MW\Database\Types\Blob.cs" />
     <Compile Include="Games\MW\Database\Types\CollectionKey.cs" />
     <Compile Include="Games\MW\Database\Types\EABoolean.cs" />
     <Compile Include="Games\MW\Database\Types\EADouble.cs" />
@@ -90,6 +97,7 @@
     <Compile Include="Games\MW\Database\VltInfo.cs" />
     <Compile Include="Games\MW\Database\VltTableEntry.cs" />
     <Compile Include="Games\MW\Database\VltMarker.cs" />
+    <Compile Include="Games\MW\Database\VltTreeManager.cs" />
     <Compile Include="Games\MW\Database\VltType.cs" />
     <Compile Include="Games\MW\Database\VltTypeMap.cs" />
     <Compile Include="Games\MW\Database\VltRowInfo.cs" />
@@ -110,6 +118,7 @@
     <Compile Include="Utils\JDLZ.cs" />
     <Compile Include="Utils\JenkinsHash.cs" />
     <Compile Include="Utils\Structures.cs" />
+    <Compile Include="Utils\Tree.cs" />
     <Compile Include="VFS\Resources\TexturePackResource.cs" />
     <Compile Include="VFS\VfsBundle.cs" />
     <Compile Include="VFS\VfsManager.cs" />
