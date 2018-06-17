@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using LibOpenNFS.Utils;
 
 namespace LibOpenNFS.Games.MW.Database.Types
@@ -17,14 +18,14 @@ namespace LibOpenNFS.Games.MW.Database.Types
 
         private int _unknown1;
         private uint _typeHash;
-        
+
         public Type Type;
 
         public ArrayType(VltClass.Field field, Type type)
         {
             _unknown1 = field.UnknownUse();
             _typeHash = field.TypeHash;
-        
+
             Type = type;
             Types = new List<VltType>();
         }
@@ -57,13 +58,13 @@ namespace LibOpenNFS.Games.MW.Database.Types
 
                 Debug.Assert(vt != null, nameof(vt) + " != null");
 
-                vt.Address = (uint) br.BaseStream.Position;
+                vt.Address = (uint)br.BaseStream.Position;
                 vt.IsVlt = false;
                 vt.TypeHash = _typeHash;
                 vt.Info = Info;
                 vt.Index = i;
                 vt.Read(br);
-                
+
                 Types.Add(vt);
             }
         }
@@ -81,6 +82,11 @@ namespace LibOpenNFS.Games.MW.Database.Types
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(", ", Types.Select(t => t.ToString()));
         }
     }
 }

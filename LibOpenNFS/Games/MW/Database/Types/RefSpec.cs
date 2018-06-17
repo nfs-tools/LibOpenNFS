@@ -6,7 +6,7 @@ namespace LibOpenNFS.Games.MW.Database.Types
     {
         private uint _refClassHash;
         private uint _refCollectionHash;
-        
+
         public override void Read(BinaryReader br)
         {
             _refClassHash = br.ReadUInt32();
@@ -19,6 +19,6 @@ namespace LibOpenNFS.Games.MW.Database.Types
             throw new System.NotImplementedException();
         }
 
-        public override string ToString() => $"0x{_refClassHash:X8} -> 0x{_refCollectionHash:X8}";
+        public override string ToString() => $"0x{_refClassHash:X8} -> 0x{_refCollectionHash:X8} ({HashManager.HashToValue(_refClassHash)} -> {HashManager.HashToValue(_refCollectionHash)})";
     }
 }

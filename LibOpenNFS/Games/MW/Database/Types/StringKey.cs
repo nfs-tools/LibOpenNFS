@@ -39,6 +39,6 @@ namespace LibOpenNFS.Games.MW.Database.Types
             throw new System.NotImplementedException();
         }
 
-        public override string ToString() => $"0x{Hash32:X8} [{Value}]";
+        public override string ToString() => $"0x{Hash32:X8} [{HashManager.HashToValue(Hash32)}]";
     }
 }

@@ -117,6 +117,27 @@ namespace LibOpenNFS.Games.MW.Database
                         itemDictionary.Add(newKey, lastItem);
                     }
                 }
+
+                // Final pass to set values
+                foreach (var info in vltClass.GetFieldManager())
+                {
+                    var infoClass = info.Class;
+                    var num = 0;
+                    var key = $"{infoClass.Hash:X8}::{info.RowRecord.Hash:X8}";
+
+                    foreach (var field in infoClass)
+                    {
+                        var type = info.Types[num++];
+
+                        if (!field.IsOptional() || info.TypesPresent[num - 1])
+                        {
+                            //if (!field.IsArray())
+                            {
+                                ((VltRowItem)itemDictionary[key].Item).Fields[field.Hash] = type;
+                            }
+                        }
+                    }
+                }
             }
         }
 

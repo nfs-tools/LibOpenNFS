@@ -13,7 +13,7 @@ namespace LibOpenNFS.Games.MW.Database
     /// <summary>
     /// This is big. Really big.
     /// </summary>
-    public class VltClass : IComparable<VltClass>, IEnumerable
+    public class VltClass : IComparable<VltClass>, IEnumerable<VltClass.Field>
     {
         /// <summary>
         /// The field manager for the class
@@ -56,7 +56,7 @@ namespace LibOpenNFS.Games.MW.Database
                     var field = _vltClass.Fields[i];
                     BinaryReader br;
 
-                    if (!field.UnknownMeaning())
+                    if (!field.IsOptional())
                     {
                         br = binReader;
                         br.BaseStream.Seek(basePosition + field.Offset, SeekOrigin.Begin);
@@ -176,7 +176,7 @@ namespace LibOpenNFS.Games.MW.Database
 
             public bool IsArray() => (Flag1 & 1) != 0;
 
-            public bool UnknownMeaning() => (Flag1 & 2) == 0;
+            public bool IsOptional() => (Flag1 & 2) == 0;
 
             public int UnknownUse() => 1 << Flag2;
 
@@ -241,9 +241,15 @@ namespace LibOpenNFS.Games.MW.Database
 
         public int CompareTo(VltClass other) => Hash.CompareTo(other.Hash);
 
-        public IEnumerator GetEnumerator()
+
+        public IEnumerator<Field> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return Fields.ToList().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
