@@ -85,7 +85,7 @@ namespace LibOpenNFS.Games.MW.Database
             // pretty print
             foreach (var vltClass in VltClassManager.Instance)
             {
-                var classNode = new Tree<VltTreeItem>.TreeItem(new VltClassItem(vltClass));
+                var classNode = VltTreeManager.Instance.Tree.Add(new VltClassItem(vltClass));
 
                 // First pass to create top-level elements
                 foreach (var info in vltClass.GetFieldManager())
@@ -117,8 +117,6 @@ namespace LibOpenNFS.Games.MW.Database
                         itemDictionary.Add(newKey, lastItem);
                     }
                 }
-                
-                VltTreeManager.Instance.Tree.Items.Add(classNode);
             }
         }
 

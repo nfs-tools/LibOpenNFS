@@ -6,7 +6,7 @@ namespace LibOpenNFS.Utils
     /// <summary>
     /// A simple nested tree structure.
     /// </summary>
-    public class Tree<T>
+    public class Tree<T> where T : class
     {
         public List<TreeItem> Items;
 
@@ -15,12 +15,14 @@ namespace LibOpenNFS.Utils
             Items = new List<TreeItem>();
         }
 
-        public void Add(T item)
+        public TreeItem Add(T item)
         {
-            if (!Items.Exists(i => EqualityComparer<T>.Default.Equals(item, i.Item)))
+            if (!Items.Exists(i => i.Item.Equals(item)))
             {
                 Items.Add(new TreeItem(item));
             }
+
+            return Items.Find(i => i.Item.Equals(item));
         }
 
         /// <summary>
@@ -59,15 +61,13 @@ namespace LibOpenNFS.Utils
 
             public TreeItem AddSubItem(T item)
             {
-                if (!SubItems.Exists(i => EqualityComparer<T>.Default.Equals(item, i.Item)))
+                if (!SubItems.Exists(i => i.Item.Equals(item)))
                 {
                     var newItem = new TreeItem(item);
                     SubItems.Add(newItem);
-
-                    return newItem;
                 }
 
-                return SubItems.Find(i => EqualityComparer<T>.Default.Equals(item, i.Item));
+                return SubItems.Find(i => i.Item.Equals(item));
             }
         }
     }
