@@ -1,5 +1,6 @@
 ﻿using System;
 using LibOpenNFS.Games.MW;
+using LibOpenNFS.Games.World;
 using LibOpenNFS.Interfaces;
 using LibOpenNFS.Utils;
 using LibOpenNFS.VFS;
@@ -58,6 +59,12 @@ namespace LibOpenNFS
                     _loader = new MWLoader();
                     _loader.Initialize(directory);
                     
+                    break;
+                }
+                case NFSGame.World:
+                {
+                    _loader = new WorldLoader();
+                    _loader.Initialize(directory);
                     break;
                 }
                 default:

@@ -108,7 +108,12 @@
     <Compile Include="Games\MW\MWLoader.cs" />
     <Compile Include="Games\MW\MWMapStreamReader.cs" />
     <Compile Include="Games\MW\Readers\SolidListReader.cs" />
+    <Compile Include="Games\MW\Readers\SolidObjectReader.cs" />
     <Compile Include="Games\MW\Readers\TexturePackReader.cs" />
+    <Compile Include="Games\World\Readers\SolidListReader.cs" />
+    <Compile Include="Games\World\Readers\SolidObjectReader.cs" />
+    <Compile Include="Games\World\WorldBundleReader.cs" />
+    <Compile Include="Games\World\WorldLoader.cs" />
     <Compile Include="Interfaces\IGameLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\BinaryUtil.cs" />
@@ -127,7 +132,7 @@
     <Compile Include="VFS\VfsUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Games\ProStreet" />
+    <Folder Include="Games\ProStreet\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -39,11 +39,13 @@ namespace LibOpenNFS.TestingArea
                 if (args.Length > 1)
                 {
                     gameManager.GetLoader().LoadFile(args[1]);
+                    //Console.ReadKey();
                 }
                 else
                 {
-//                    gameManager.GetLoader().LoadMapStream();
-                    gameManager.GetLoader().LoadDatabase();
+                    gameManager.GetLoader().LoadMapStream();
+                    //Console.ReadKey();
+                    //gameManager.GetLoader().LoadDatabase();
                 }
             }
         }

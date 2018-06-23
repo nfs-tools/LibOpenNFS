@@ -126,6 +126,78 @@ namespace LibOpenNFS.Utils
             return (float) ((long) ((short*) buf)[pos]) / (float) 0x8000;
         }
 
+        public static float UnpackIfNecessary(float f, byte[] data, float min, float max, bool reverseBytes = true)
+        {
+            var cloned = (byte[]) data.Clone();
+
+            if (reverseBytes)
+                Array.Reverse(cloned);
+
+            if (f < min || f > max || float.IsNaN(f))
+            {
+                unsafe
+                {
+                    fixed (byte* ptr = cloned)
+                    {
+                        return GetPackedFloat(ptr, 0);
+                    }
+                }
+            }
+
+            //if (!NearlyEqual(f, min, 0.000000001))
+            //{
+            //    unsafe
+            //    {
+            //        fixed (byte* ptr = cloned)
+            //        {
+            //            return GetPackedFloat(ptr, 0);
+            //        }
+            //    }
+            //}
+
+            if (f >= min && f <= max && !float.IsNaN(f))
+            {
+                return f;
+            }
+
+            var exponent = f == 0.0f ? 0 : (int)Math.Floor((Math.Log10(Math.Abs(f))));
+
+            if (exponent < 0)
+            {
+                unsafe
+                {
+                    fixed (byte* ptr = cloned)
+                    {
+                        return GetPackedFloat(ptr, 0);
+                    }
+                }
+            }
+
+            return f;
+        }
+
+        public static bool NearlyEqual(double a, double b, double epsilon)
+        {
+            double absA = Math.Abs(a);
+            double absB = Math.Abs(b);
+            double diff = Math.Abs(a - b);
+
+            if (a == b)
+            { // shortcut, handles infinities
+                return true;
+            }
+            else if (a == 0 || b == 0 || diff < Double.Epsilon)
+            {
+                // a or b is zero or both are extremely close to it
+                // relative error is less meaningful here
+                return diff < epsilon;
+            }
+            else
+            { // use relative error
+                return diff / (absA + absB) < epsilon;
+            }
+        }
+
         /// <summary>
         /// Align a value to a given offset. 
         /// </summary>

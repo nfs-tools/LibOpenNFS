@@ -61,7 +61,7 @@ namespace LibOpenNFS.Bundles
                 var chunkSize = Reader.ReadUInt32();
                 var chunkRunTo = Reader.BaseStream.Position + chunkSize;
 
-                Console.WriteLine($"ID: 0x{chunkId:X8} size: {chunkSize}");
+                //Console.WriteLine($"ID: 0x{chunkId:X8} size: {chunkSize}");
 
                 switch (chunkId)
                 {

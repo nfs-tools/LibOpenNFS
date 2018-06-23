@@ -6,7 +6,7 @@ using LibOpenNFS.Bundles;
 using LibOpenNFS.Bundles.Resources;
 using LibOpenNFS.Utils;
 
-namespace LibOpenNFS.Games.MW.Readers
+namespace LibOpenNFS.Games.World.Readers
 {
     public class SolidListReader : ReadContainer<SolidList>
     {
@@ -64,43 +64,43 @@ namespace LibOpenNFS.Games.MW.Readers
 
                 BinaryUtil.ApplyPadding(Reader, ref chunkSize);
 
-                Console.WriteLine($"\tID: 0x{chunkId:X8} size: {chunkSize}");
+                //Console.WriteLine($"\tID: 0x{chunkId:X8} size: {chunkSize}");
                 var chunkRunTo = Reader.BaseStream.Position + chunkSize;
 
                 switch (chunkId)
                 {
                     case 0x80134001: // Root
-                    {
-                        ReadChunks(chunkSize);
-                        break;
-                    }
-                    case 0x80134010: // Object
-                    {
-                        new SolidObjectReader(Reader, chunkSize).Get();
-
-                        break;
-                    }
-                    case 0x00134002: // Info
-                    {
-                        var fileInfo = BinaryUtil.ReadStruct<FileInfo>(Reader);
-
-                        break;
-                    }
-                    case 0x00134003: // Hash table
-                    {
-                        DebugUtil.EnsureCondition(
-                            chunkSize % 8 == 0,
-                            () => $"{chunkSize} % 8 != 0");
-
-                        for (var j = 0; j < chunkSize / 8; j++)
                         {
-                            var hash = Reader.ReadUInt32();
-
-                            Reader.ReadUInt32();
+                            ReadChunks(chunkSize);
+                            break;
                         }
+                    case 0x80134010: // Object
+                        {
+                            new SolidObjectReader(Reader, chunkSize).Get();
 
-                        break;
-                    }
+                            break;
+                        }
+                    case 0x00134002: // Info
+                        {
+                            var fileInfo = BinaryUtil.ReadStruct<FileInfo>(Reader);
+
+                            break;
+                        }
+                    case 0x00134003: // Hash table
+                        {
+                            DebugUtil.EnsureCondition(
+                                chunkSize % 8 == 0,
+                                () => $"{chunkSize} % 8 != 0");
+
+                            for (var j = 0; j < chunkSize / 8; j++)
+                            {
+                                var hash = Reader.ReadUInt32();
+
+                                Reader.ReadUInt32();
+                            }
+
+                            break;
+                        }
                     default: break;
                 }
 
